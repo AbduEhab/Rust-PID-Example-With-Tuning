@@ -12,12 +12,12 @@ fn main() {
     let v0: f64 = 1.0; // initial velocity
 
     // Set the desired position
-    let x_desired: f64 = 1.0;
+    let x_desired: f64 = 1.;
 
     // PID controller gains
-    let kp: f64 = 1.0; // Proportional gain
-    let ki: f64 = 0.5; // Integral gain
-    let kd: f64 = 0.9; // Derivative gain
+    let mut kp: f64 = 0.0; // Proportional gain
+    let mut ki: f64 = 0.0; // Integral gain
+    let mut kd: f64 = 0.0; // Derivative gain
 
     // Define the range of values for t (time)
     let t_start: f64 = 0.0;
@@ -73,7 +73,8 @@ fn main() {
     }
 
     // Plot the solution trajectory
-    let root = BitMapBackend::new("spring_mass_damper_pid.png", (800, 600)).into_drawing_area();
+    let root =
+        BitMapBackend::new("spring_mass_damper_pid_tuned.png", (800, 600)).into_drawing_area();
     root.fill(&WHITE).unwrap();
 
     let t_min = *t_values
@@ -98,7 +99,7 @@ fn main() {
         .y_label_area_size(40)
         .margin(5)
         .caption(
-            "Spring-Mass-Damper System with PID Controller",
+            "Spring-Mass-Damper System Response with PID Tuning",
             ("Arial", 20),
         )
         .build_cartesian_2d(t_min..t_max, x_min..x_max)
@@ -112,6 +113,62 @@ fn main() {
             &BLUE,
         ))
         .unwrap();
+
+    // Perform Tyreus-Luyben PID tuning
+    let tuning_duration = 5.0; // Duration for step testing
+    let tuning_step = 0.1; // Step size for tuning
+
+    let mut integral_sum = 0.0;
+    let mut prev_tuning_error = 0.0;
+
+    for _ in 0..((tuning_duration / tuning_step) as usize) {
+        let tuning_error = x_desired - x_values[x_values.len() - 1];
+        integral_sum += tuning_error * tuning_step;
+        let derivative = (tuning_error - prev_tuning_error) / tuning_step;
+
+        kp = 0.6 / tuning_error;
+        ki = 1.2 / integral_sum;
+        kd = 0.075 / derivative;
+
+        for i in 0..num_steps {
+            let t = t_values[i];
+            let x = x_values[i];
+            let v = v_values[i];
+
+            let error = x_desired - x;
+            let control_input = kp * error + ki * integral_term + kd * (error - prev_error) / h;
+
+            integral_term += error * h;
+
+            let dx_dt = v;
+            let dv_dt = (-c / m) * v - (k / m) * x + control_input;
+
+            let dt = h;
+
+            let x_next = x + dx_dt * dt;
+            let v_next = v + dv_dt * dt;
+            let t_next = t + dt;
+
+            t_values[i + 1] = t_next;
+            x_values[i + 1] = x_next;
+            v_values[i + 1] = v_next;
+
+            prev_error = error;
+        }
+
+        prev_tuning_error = tuning_error;
+    }
+
+    // Plot the system response after tuning
+    chart
+        .draw_series(LineSeries::new(
+            t_values.iter().zip(x_values.iter()).map(|(&t, &x)| (t, x)),
+            &RED,
+        ))
+        .unwrap();
+
+    // print the final values of the PID gains
+    println!("kp = {}, ki = {}, kd = {}", kp, ki, kd);
 
     // Save the plot as an image
     root.present().expect("Failed to save the image");

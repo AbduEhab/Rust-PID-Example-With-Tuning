@@ -12,7 +12,7 @@ Tuned PID Response:
 ![Tuned PID Response](spring_mass_damper_pid_tuned_response.png)
 
 ## Usage
-Replace the equation in the main "for loop" at line 45 with your differential equation. The tuning will be done automatically. The PID-Controller can be tuned manually by changing the values in the PID-Controller at lines 18-20. Setting the values to 0 will disable the PID-Controller, and setting the "TUNER" variable will Enable the tuner.
+Replace the equation in the main `for loop at line 45` with your differential equation. The tuning will be done automatically. The PID-Controller can be tuned manually by changing the values in the `PID-Controller at lines 18-20`. Setting the values to `0` will disable the PID-Controller, and setting the `TUNER` global variable will Enable the tuner.
 
 
 ## Features

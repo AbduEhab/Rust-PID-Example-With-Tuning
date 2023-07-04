@@ -1,4 +1,4 @@
-# Rust-Defferential-Equation-Solver
+# Rust-PID-Example-With-Tuning
 A differential equation solver using the Euler-Method. The current example simulates a spring-mass-damper system. The PID-Controller example has been implemented just because. The PID-Controller can be tuned using the Ziegler-Nichols method.
 
 ## Outputs
